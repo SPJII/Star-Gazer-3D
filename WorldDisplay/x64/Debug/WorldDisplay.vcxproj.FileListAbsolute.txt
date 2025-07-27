@@ -2,3 +2,5 @@ C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\x64\Debug\SDL2d.dll
 C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\WorldDisplay\x64\Debug\WorldDis.2293B6B3.Up2Date
 C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\x64\Debug\SDL2d.dll
 C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\WorldDisplay\x64\Debug\WorldDis.2293B6B3.Up2Date
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\x64\Debug\SDL2d.dll
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\WorldDisplay\x64\Debug\WorldDis.2293B6B3.Up2Date

@@ -1,9 +1,9 @@
 ﻿  main.cpp
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\main.cpp(146,64): warning C4305: 'argument': truncation from 'double' to '_Ty'
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\main.cpp(146,64): warning C4305:         with
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\main.cpp(146,64): warning C4305:         [
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\main.cpp(146,64): warning C4305:             _Ty=float
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\main.cpp(146,64): warning C4305:         ]
-  WorldDisplay.vcxproj -> C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\SolarSystemGenerator\WorldDisplay\x64\Debug\WorldDisplay.exe
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305: 'argument': truncation from 'double' to '_Ty'
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         with
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         [
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:             _Ty=float
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         ]
+  WorldDisplay.vcxproj -> C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\x64\Debug\WorldDisplay.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

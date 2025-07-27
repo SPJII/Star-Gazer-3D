@@ -441,7 +441,7 @@ void initSDL(int argc, char* argv[], SDL_Window*& window, SDL_GLContext& context
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    window = SDL_CreateWindow("SPJII's Solar System Sandbox",
+    window = SDL_CreateWindow("StarGazer 3D",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_WIDTH, SCREEN_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
