@@ -22,6 +22,11 @@ extern const int SLIDER_WIDTH;
 extern const int SLIDER_HEIGHT;
 extern const int SLIDER_KNOB_WIDTH;
 extern const int SLIDER_KNOB_HEIGHT;
+extern const int MINI_MAP_TAB_WIDTH;
+extern const int MINI_MAP_TAB_HEIGHT;
+extern const int MINI_MAP_WIDTH;
+extern const int MINI_MAP_HEIGHT;
+
 
 // Global movement speed variable
 extern float movementSpeed;

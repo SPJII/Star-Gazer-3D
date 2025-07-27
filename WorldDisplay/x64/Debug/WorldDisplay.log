@@ -1,9 +1,12 @@
-﻿  main.cpp
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305: 'argument': truncation from 'double' to '_Ty'
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         with
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         [
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:             _Ty=float
-C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\main.cpp(146,64): warning C4305:         ]
+﻿  UI.cpp
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(413,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(414,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(569,37): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(569,20): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(760,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(761,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(913,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\UI.cpp(947,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   WorldDisplay.vcxproj -> C:\Users\gyu86\OneDrive\Documents\Projects\WorldDisplay\Star-Gazer-3D\x64\Debug\WorldDisplay.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

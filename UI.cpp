@@ -1,4 +1,4 @@
-// UI.cpp
+﻿// UI.cpp
 // Implementation of user interface and input handling functions.
 
 #include "UI.h"
@@ -16,7 +16,7 @@
 
 // Screen dimensions.
 const int SCREEN_WIDTH = 1915;
-const int SCREEN_HEIGHT = 1030;
+const int SCREEN_HEIGHT = 1000;
 
 // Zoom limits.
 const float MIN_ZOOM = 0.5f;
@@ -29,7 +29,17 @@ const int SLIDER_WIDTH = 200;
 const int SLIDER_HEIGHT = 20;
 const int SLIDER_KNOB_WIDTH = 10;
 const int SLIDER_KNOB_HEIGHT = 30;
-
+// Mini-Map location and scale
+static const int MINI_MAP_WIDTH = SCREEN_WIDTH - 10;
+static const int MINI_MAP_HEIGHT = SCREEN_HEIGHT - 70;
+static const int MINI_MAP_X = 5; // bottom-left X
+static const int MINI_MAP_Y = SCREEN_HEIGHT - MINI_MAP_HEIGHT - 35; // from top if 0=top
+static const float MINI_MAP_SCALE = 1.0f / 450.0f;
+// adjust so your system fits in that 200x200 box
+const int MINI_MAP_TAB_WIDTH = 30;
+const int MINI_MAP_TAB_HEIGHT = 30;
+const int MINI_MAP_TAB_X = 5;
+const int MINI_MAP_TAB_Y = MINI_MAP_Y + MINI_MAP_HEIGHT ;
 
 // Global movement speed variable.
 float movementSpeed = 1.0f; // Default speed.
@@ -43,6 +53,7 @@ bool tabOpen = false;
 bool showResourceNodes = false; // Initialize resource node display to false.
 bool showProvinces = false;     // Initialize province display to false.
 float sliderPosition = 0.5f;    // Slider position ranges from 0.0f to 1.0f.
+bool miniMapOpen = false; // Controls minimap visibility
 bool draggingSlider = false;
 
 // Camera variables.
@@ -71,21 +82,22 @@ bool keys[SDL_NUM_SCANCODES] = { false };
 // Map mode
 int currentMapMode = MapMode::NORMAL_MODE;
 
-// Mini-Map location and scale
-static const int MINI_MAP_WIDTH = 450;
-static const int MINI_MAP_HEIGHT = 450;
-static const int MINI_MAP_X = 10; // bottom-left X
-static const int MINI_MAP_Y = SCREEN_HEIGHT - MINI_MAP_HEIGHT - 10; // from top if 0=top
-static const float MINI_MAP_SCALE = 1.0f / 450.0f;
-// adjust so your system fits in that 200x200 box
 
+// ——— Toggle buttons for resources & provinces ———
+const int TOGGLE_BUTTON_WIDTH = 150;
+const int TOGGLE_BUTTON_HEIGHT = 20;
 
-// UI control for resource nodes and provinces.
-int buttonWidth = 150;
-int buttonHeight = 30;
-int buttonX = SCREEN_WIDTH - buttonWidth - 10; // 10 pixels from the right.
-int buttonY = SCREEN_HEIGHT - buttonHeight - 10; // 10 pixels from the bottom.
-int provinceButtonX = buttonX - buttonWidth - 10; // Province button to the left of resource button.
+// right‑aligned, 10px from edge
+int resourceToggleX = SCREEN_WIDTH - TOGGLE_BUTTON_WIDTH - 5;
+int resourceToggleY = SCREEN_HEIGHT - TOGGLE_BUTTON_HEIGHT - 5;
+
+// placed immediately to the left of the resource toggle
+int provinceToggleX = resourceToggleX - TOGGLE_BUTTON_WIDTH - 10;
+int provinceToggleY = resourceToggleY;
+
+// state flags
+bool resourcesVisible = false;
+bool provincesVisible = false;
 
 float computeMaxDistance(const std::vector<CelestialBody*>& bodies, float sunX, float sunZ) {
     float maxDist = 0.0f;
@@ -176,15 +188,23 @@ void handleInput(SDL_Event& event, bool& running, std::vector<CelestialBody*>& a
                 camPitch = defaultPitch;
                 break;
             }
-            // Check resource and province buttons�
-            if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
-                mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-                showResourceNodes = !showResourceNodes;
+            // Resource toggle
+            if (cameraLocked &&
+                lockedObject &&
+                lockedObject->getType() == CelestialBodyType::PLANET &&
+                mouseX >= resourceToggleX && mouseX <= resourceToggleX + TOGGLE_BUTTON_WIDTH &&
+                mouseY >= resourceToggleY && mouseY <= resourceToggleY + TOGGLE_BUTTON_HEIGHT) {
+                resourcesVisible = !resourcesVisible;
                 break;
             }
-            if (mouseX >= provinceButtonX && mouseX <= provinceButtonX + buttonWidth &&
-                mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-                showProvinces = !showProvinces;
+
+            // Province toggle
+            if (cameraLocked &&
+                lockedObject &&
+                lockedObject->getType() == CelestialBodyType::PLANET &&
+                mouseX >= provinceToggleX && mouseX <= provinceToggleX + TOGGLE_BUTTON_WIDTH &&
+                mouseY >= provinceToggleY && mouseY <= provinceToggleY + TOGGLE_BUTTON_HEIGHT) {
+                provincesVisible = !provincesVisible;
                 break;
             }
             // Check tab.
@@ -192,8 +212,14 @@ void handleInput(SDL_Event& event, bool& running, std::vector<CelestialBody*>& a
                 tabOpen = !tabOpen;
                 break;
             }
+            // Check minimap tab click
+            if (mouseX >= MINI_MAP_TAB_X && mouseX <= MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH &&
+                mouseY >= MINI_MAP_TAB_Y && mouseY <= MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT) {
+                miniMapOpen = !miniMapOpen;
+                break;
+            }
             // Then check if click is in mini-map.
-            bool inMiniMap = (mouseX >= MINI_MAP_X && mouseX <= MINI_MAP_X + MINI_MAP_WIDTH &&
+            bool inMiniMap = (miniMapOpen && mouseX >= MINI_MAP_X && mouseX <= MINI_MAP_X + MINI_MAP_WIDTH &&
                 mouseY >= MINI_MAP_Y && mouseY <= MINI_MAP_Y + MINI_MAP_HEIGHT);
             if (inMiniMap) {
                 // 1) Find the Sun
@@ -234,7 +260,7 @@ void handleInput(SDL_Event& event, bool& running, std::vector<CelestialBody*>& a
                 }
 
                 // 5) If we found something within 'mapThreshold', lock on it
-                if (picked && sqrtf(closestDistSq) < mapThreshold) {
+                if (picked && miniMapOpen && sqrtf(closestDistSq) < mapThreshold) {
                     cameraLocked = true;
                     lockedObject = picked;
 
@@ -260,7 +286,7 @@ void handleInput(SDL_Event& event, bool& running, std::vector<CelestialBody*>& a
                     relativePitch = 20.f;
                     isTransitioning = true;
                 }
-                else {
+                if(miniMapOpen) {
                     // If no body was found within threshold, just recenter camera
                     cameraLocked = false;
                     lockedObject = nullptr;
@@ -271,6 +297,27 @@ void handleInput(SDL_Event& event, bool& running, std::vector<CelestialBody*>& a
                     targetCamY = camY;  // keep same height
                     targetCamZ = dz + sunZ;
                     isTransitioning = true;
+
+                    // 2) Compute maxDist so we know how large the system is
+                    float maxDist = computeMaxDistance(allCelestialBodies, sunX, sunZ);
+
+                    // 3) Convert mini-map click to world offset from the sun
+                    float centerX = MINI_MAP_X + MINI_MAP_WIDTH * 0.5f;
+                    float centerY = MINI_MAP_Y + MINI_MAP_HEIGHT * 0.5f;
+                    // NOTE: Y axis is inverted in screen coords if 0=top; adapt if needed
+                    float localX = mouseX - centerX;
+                    float localY = mouseY - centerY;
+                    float worldOffsetX = localX / dynamicScale;
+                    float worldOffsetZ = localY / dynamicScale;
+
+                    // 4) Move camera there
+                    cameraLocked = false;
+                    lockedObject = nullptr;
+                    targetCamX = sunX + worldOffsetX;
+                    targetCamY = camY;             // keep current height
+                    targetCamZ = sunZ + worldOffsetZ;
+                    isTransitioning = true;
+
                 }
 
                 // End of inMiniMap block
@@ -416,14 +463,13 @@ void renderUI() {
     // Disable depth test and lighting for UI rendering.
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
     // Render the reset button in the top-left corner.
-    int resetBtnX = 10; // 10 pixels from the left.
-    int resetBtnY = 10; // 10 pixels from the top.
-    int resetBtnWidth = 100;
-    int resetBtnHeight = 30;
+    int resetBtnX = 5; // 0 pixels from the left.
+    int resetBtnY = 5; // 0 pixels from the top.
+    int resetBtnWidth = 125;
+    int resetBtnHeight = 20;
 
     // Button background.
     glColor4f(0.2f, 0.2f, 0.2f, 0.8f); // Semi-transparent dark gray.
@@ -444,42 +490,53 @@ void renderUI() {
     glVertex2i(resetBtnX, resetBtnY + resetBtnHeight);
     glEnd();
 
-    // Button label.
+    // Reset Button label.
     {
         glColor3f(1.0f, 1.0f, 1.0f); // White color.
         std::string resetText = "Reset Position";
         // Center the text.
         float textWidth = resetText.length() * 8.0f; // Approximate width per character.
-        float textX = resetBtnX + (resetBtnWidth - textWidth) / 2.0f;
-        float textY = resetBtnY + (resetBtnHeight - 18.0f) / 2.0f + 5.0f; // 18 is approx. height of the font.
+        float textX = 2 + (resetBtnWidth - textWidth) / 2.0f;
+        float textY = 15 + (resetBtnHeight - 18.0f) / 2.0f + 5.0f; // 18 is approx. height of the font.
 
         renderText(textX, textY, resetText, GLUT_BITMAP_HELVETICA_18);
     }
+    // Render the Time tab background.
 
-    // Render the tab.
-    glColor4f(0.2f, 0.2f, 0.2f, 0.8f); // Semi-transparent dark gray.
+    const int timeTabX = SCREEN_WIDTH - TAB_WIDTH - 5;
+    const int timeTabY = 5;
+
     glBegin(GL_QUADS);
-    glVertex2i(SCREEN_WIDTH - TAB_WIDTH, 0);
-    glVertex2i(SCREEN_WIDTH, 0);
-    glVertex2i(SCREEN_WIDTH, TAB_HEIGHT);
-    glVertex2i(SCREEN_WIDTH - TAB_WIDTH, TAB_HEIGHT);
+    glColor4f(0.2f, 0.2f, 0.2f, 0.8f);
+    glVertex2i(timeTabX, timeTabY);
+    glVertex2i(timeTabX + TAB_WIDTH, timeTabY);
+    glVertex2i(timeTabX + TAB_WIDTH, timeTabY + TAB_HEIGHT);
+    glVertex2i(timeTabX, timeTabY + TAB_HEIGHT);
     glEnd();
 
-    // Render a plus or minus sign on the tab.
-    glColor3f(1.0f, 1.0f, 1.0f); // White color.
-    glLineWidth(2.0f);
+    // outline
+    glColor3f(1, 1, 1);
+    glLineWidth(2);
+    glBegin(GL_LINE_LOOP);
+    glVertex2i(timeTabX, timeTabY);
+    glVertex2i(timeTabX + TAB_WIDTH, timeTabY);
+    glVertex2i(timeTabX + TAB_WIDTH, timeTabY + TAB_HEIGHT);
+    glVertex2i(timeTabX, timeTabY + TAB_HEIGHT);
+    glEnd();
+
+    // plus/minus lines
     glBegin(GL_LINES);
-    // Horizontal line.
-    glVertex2i(SCREEN_WIDTH - TAB_WIDTH + 8, TAB_HEIGHT / 2);
-    glVertex2i(SCREEN_WIDTH - 8, TAB_HEIGHT / 2);
+    // horizontal
+    glVertex2i(timeTabX + 8, timeTabY + TAB_HEIGHT / 2);
+    glVertex2i(timeTabX + TAB_WIDTH - 8, timeTabY + TAB_HEIGHT / 2);
+    // vertical only when closed
     if (!tabOpen) {
-        // Vertical line for plus sign.
-        glVertex2i(SCREEN_WIDTH - TAB_WIDTH + TAB_WIDTH / 2, 8);
-        glVertex2i(SCREEN_WIDTH - TAB_WIDTH + TAB_WIDTH / 2, TAB_HEIGHT - 8);
+        glVertex2i(timeTabX + TAB_WIDTH / 2, timeTabY + 8);
+        glVertex2i(timeTabX + TAB_WIDTH / 2, timeTabY + TAB_HEIGHT - 8);
     }
     glEnd();
 
-    // If tab is open, render the slider and label.
+    // If Time tab is open, render the slider and label.
     if (tabOpen) {
         int sliderX = SCREEN_WIDTH - TAB_WIDTH - SLIDER_WIDTH;
         int sliderY = TAB_HEIGHT + 40; // Adjusted Y position to make room for label.
@@ -512,69 +569,129 @@ void renderUI() {
         renderText(sliderX, sliderY - 20, speedText, GLUT_BITMAP_HELVETICA_18);
     }
 
-    // Render the resource nodes button.
-    glColor4f(0.2f, 0.2f, 0.2f, 0.8f); // Semi-transparent dark gray.
-    glBegin(GL_QUADS);
-    glVertex2i(buttonX, buttonY);
-    glVertex2i(buttonX + buttonWidth, buttonY);
-    glVertex2i(buttonX + buttonWidth, buttonY + buttonHeight);
-    glVertex2i(buttonX, buttonY + buttonHeight);
-    glEnd();
+    const float fontHeight = 12.0f;
 
-    // Button border.
-    glColor3f(1.0f, 1.0f, 1.0f); // White color.
-    glLineWidth(2.0f);
-    glBegin(GL_LINE_LOOP);
-    glVertex2i(buttonX, buttonY);
-    glVertex2i(buttonX + buttonWidth, buttonY);
-    glVertex2i(buttonX + buttonWidth, buttonY + buttonHeight);
-    glVertex2i(buttonX, buttonY + buttonHeight);
-    glEnd();
+    // only draw these toggles if locked on a planet
+    if (cameraLocked && lockedObject && lockedObject->getType() == CelestialBodyType::PLANET) {
+        // ——— Resources toggle button ———
+        glColor4f(0.2f, 0.2f, 0.2f, 0.8f);
+        glBegin(GL_QUADS);
+        glVertex2i(resourceToggleX, resourceToggleY);
+        glVertex2i(resourceToggleX + TOGGLE_BUTTON_WIDTH, resourceToggleY);
+        glVertex2i(resourceToggleX + TOGGLE_BUTTON_WIDTH, resourceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glVertex2i(resourceToggleX, resourceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glEnd();
 
-    // Button label.
-    {
-        glColor3f(1.0f, 1.0f, 1.0f); // White color.
-        std::string buttonText = showResourceNodes ? "Hide Resources" : "Show Resources";
-        // Center the text.
-        float textWidth = buttonText.length() * 8.0f; // Approximate width per character.
-        float textX = buttonX + (buttonWidth - textWidth) / 2.0f;
-        float textY = buttonY + (buttonHeight - 18.0f) / 2.0f + 5.0f; // 18 is approx. height of the font.
+        // border
+        glColor3f(1, 1, 1);
+        glLineWidth(2);
+        glBegin(GL_LINE_LOOP);
+        glVertex2i(resourceToggleX, resourceToggleY);
+        glVertex2i(resourceToggleX + TOGGLE_BUTTON_WIDTH, resourceToggleY);
+        glVertex2i(resourceToggleX + TOGGLE_BUTTON_WIDTH, resourceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glVertex2i(resourceToggleX, resourceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glEnd();
 
-        renderText(textX, textY, buttonText, GLUT_BITMAP_HELVETICA_18);
+        // ——— Resources toggle button label ———
+        {
+            std::string txt = resourcesVisible ? "Hide Resources" : "Show Resources";
+            float textWidth = txt.length() * 8.0f;
+            float textX = resourceToggleX + (TOGGLE_BUTTON_WIDTH - textWidth) / 7.0f;
+
+            const float fontHeight = 12.0f;
+            float textY = resourceToggleY
+                + (TOGGLE_BUTTON_HEIGHT - fontHeight) / 2.0f
+                + fontHeight;
+
+            glColor3f(1, 1, 1);
+            renderText(textX, textY, txt, GLUT_BITMAP_HELVETICA_18);
+        }
+
+        // ——— Provinces toggle button ———
+        glColor4f(0.2f, 0.2f, 0.2f, 0.8f);
+        glBegin(GL_QUADS);
+        glVertex2i(provinceToggleX, provinceToggleY);
+        glVertex2i(provinceToggleX + TOGGLE_BUTTON_WIDTH, provinceToggleY);
+        glVertex2i(provinceToggleX + TOGGLE_BUTTON_WIDTH, provinceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glVertex2i(provinceToggleX, provinceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glEnd();
+
+        // border
+        glColor3f(1, 1, 1);
+        glLineWidth(2);
+        glBegin(GL_LINE_LOOP);
+        glVertex2i(provinceToggleX, provinceToggleY);
+        glVertex2i(provinceToggleX + TOGGLE_BUTTON_WIDTH, provinceToggleY);
+        glVertex2i(provinceToggleX + TOGGLE_BUTTON_WIDTH, provinceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glVertex2i(provinceToggleX, provinceToggleY + TOGGLE_BUTTON_HEIGHT);
+        glEnd();
+
+        // ——— Provinces toggle button label ———
+        {
+            std::string txt = provincesVisible ? "Hide Provinces" : "Show Provinces";
+            float textWidth = txt.length() * 8.0f;
+            float textX = provinceToggleX + (TOGGLE_BUTTON_WIDTH - textWidth) / 5.0f;
+
+            const float fontHeight = 12.0f;
+            float textY = provinceToggleY
+                + (TOGGLE_BUTTON_HEIGHT - fontHeight) / 2.0f
+                + fontHeight;
+
+            glColor3f(1, 1, 1);
+            renderText(textX, textY, txt, GLUT_BITMAP_HELVETICA_18);
+        }
     }
 
-    // Render the provinces button.
-    glColor4f(0.2f, 0.2f, 0.2f, 0.8f); // Semi-transparent dark gray.
-    glBegin(GL_QUADS);
-    glVertex2i(provinceButtonX, buttonY);
-    glVertex2i(provinceButtonX + buttonWidth, buttonY);
-    glVertex2i(provinceButtonX + buttonWidth, buttonY + buttonHeight);
-    glVertex2i(provinceButtonX, buttonY + buttonHeight);
-    glEnd();
-
-    // Button border.
-    glColor3f(1.0f, 1.0f, 1.0f); // White color.
-    glLineWidth(2.0f);
-    glBegin(GL_LINE_LOOP);
-    glVertex2i(provinceButtonX, buttonY);
-    glVertex2i(provinceButtonX + buttonWidth, buttonY);
-    glVertex2i(provinceButtonX + buttonWidth, buttonY + buttonHeight);
-    glVertex2i(provinceButtonX, buttonY + buttonHeight);
-    glEnd();
-
-    // Button label.
-    {
-        glColor3f(1.0f, 1.0f, 1.0f); // White color.
-        std::string buttonText = showProvinces ? "Hide Provinces" : "Show Provinces";
-        // Center the text.
-        float textWidth = buttonText.length() * 8.0f; // Approximate width per character.
-        float textX = provinceButtonX + (buttonWidth - textWidth) / 2.0f;
-        float textY = buttonY + (buttonHeight - 18.0f) / 2.0f + 5.0f; // 18 is approx. height of the font.
-
-        renderText(textX, textY, buttonText, GLUT_BITMAP_HELVETICA_18);
+    // Determine tab position based on open/closed
+    int tabX, tabY;
+    if (miniMapOpen) {
+        // bottom-left corner of where the map was
+        tabX = MINI_MAP_X;
+        tabY = MINI_MAP_Y + MINI_MAP_HEIGHT - MINI_MAP_TAB_HEIGHT;
+    }
+    else {
+        // bottom-left corner of where the map was
+        tabX = MINI_MAP_X;
+        tabY = MINI_MAP_Y + MINI_MAP_HEIGHT - MINI_MAP_TAB_HEIGHT;
     }
 
-    renderMiniMap(getAllCelestialBodies());
+    // draw the tab background (at the corrected position)
+    glColor3f(0.2f, 0.2f, 0.2f);
+    glRecti(
+        MINI_MAP_TAB_X,
+        MINI_MAP_TAB_Y,
+        MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH,
+        MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT
+    );
+
+    // draw the white outline
+    glColor3f(1, 1, 1);
+    glLineWidth(2);
+    glBegin(GL_LINE_LOOP);
+    glVertex2i(MINI_MAP_TAB_X, MINI_MAP_TAB_Y);
+    glVertex2i(MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH, MINI_MAP_TAB_Y);
+    glVertex2i(MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH, MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT);
+    glVertex2i(MINI_MAP_TAB_X, MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT);
+    glEnd();
+
+    // plus/minus icon, also at MINI_MAP_TAB_X/Y
+    glColor3f(1, 1, 1);
+    glLineWidth(2);
+    glBegin(GL_LINES);
+    // horizontal
+    glVertex2i(MINI_MAP_TAB_X + 8, MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT / 2);
+    glVertex2i(MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH - 8, MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT / 2);
+    // vertical (only when closed)
+    if (!miniMapOpen) {
+        glVertex2i(MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH / 2, MINI_MAP_TAB_Y + 8);
+        glVertex2i(MINI_MAP_TAB_X + MINI_MAP_TAB_WIDTH / 2, MINI_MAP_TAB_Y + MINI_MAP_TAB_HEIGHT - 8);
+    }
+    glEnd();
+
+    // Only draw minimap if open
+    if (miniMapOpen) {
+        renderMiniMap(getAllCelestialBodies());
+    }
 
     // Restore previous state.
     glDisable(GL_BLEND);
@@ -743,6 +860,16 @@ void renderMiniMap(const std::vector<CelestialBody*>& bodies)
     glVertex2i(MINI_MAP_X, MINI_MAP_Y + MINI_MAP_HEIGHT);
     glEnd();
 
+    // draw white border 
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glLineWidth(2.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2i(MINI_MAP_X, MINI_MAP_Y);
+    glVertex2i(MINI_MAP_X + MINI_MAP_WIDTH, MINI_MAP_Y);
+    glVertex2i(MINI_MAP_X + MINI_MAP_WIDTH, MINI_MAP_Y + MINI_MAP_HEIGHT);
+    glVertex2i(MINI_MAP_X, MINI_MAP_Y + MINI_MAP_HEIGHT);
+    glEnd();
+
     // Find the sun.
     float sunX = 0.f, sunY = 0.f, sunZ = 0.f;
     for (auto* b : bodies) {
@@ -758,9 +885,39 @@ void renderMiniMap(const std::vector<CelestialBody*>& bodies)
 
     // Compute maximum distance from the sun.
     float maxDist = computeMaxDistance(bodies, sunX, sunZ);
-    // Dynamic scale: we want the farthest object to appear at half the mini-map width.
-    float dynamicScale = (maxDist > 0.f) ? ((MINI_MAP_WIDTH / 1.0f) / maxDist) : (1.0f / 1000.0f);
+    float dynamicScale = (maxDist > 0)
+        ? ((MINI_MAP_WIDTH * 0.45f) / maxDist)
+        : (1 / 1000);
 
+    glEnable(GL_SCISSOR_TEST);
+
+    // glScissor() expects window-coords with (0,0) at the *bottom-left* of
+    // the window, so we have to convert our top-left-based MINI_MAP_Y.
+    GLint scissorX = MINI_MAP_X;
+    GLint scissorY = SCREEN_HEIGHT - (MINI_MAP_Y + MINI_MAP_HEIGHT);
+    glScissor(scissorX, scissorY, MINI_MAP_WIDTH, MINI_MAP_HEIGHT);
+
+    /*  ↓ everything between glEnable/glDisable will now be clipped ↓  */
+    // ——— draw predicted orbits ———
+    glColor3f(0.5f, 0.5f, 0.5f);
+    glLineWidth(1.0f);
+    const int ORBIT_SEGMENTS = 60;
+    for (auto* body : bodies) {
+        if (body->getType() == CelestialBodyType::SUN) continue;
+        float dx = body->getPositionX() - sunX;
+        float dz = body->getPositionZ() - sunZ;
+        float orbitRadius = sqrtf(dx * dx + dz * dz) * dynamicScale;
+
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i < ORBIT_SEGMENTS; ++i) {
+            float theta = 2.0f * M_PI * i / ORBIT_SEGMENTS;
+            glVertex2f(centerX + orbitRadius * cosf(theta),
+                centerY + orbitRadius * sinf(theta));
+        }
+        glEnd();
+    }
+    glDisable(GL_SCISSOR_TEST);
+    
     // Draw each body.
     for (auto* body : bodies) {
         float wx = body->getPositionX() - sunX;
@@ -790,6 +947,38 @@ void renderMiniMap(const std::vector<CelestialBody*>& bodies)
             float angle = i * (2.0f * M_PI / 12);
             glVertex2f(mapX + r * cosf(angle), mapY + r * sinf(angle));
         }
+        glEnd();
+    }
+
+    // cyan arrow for camera position
+    {
+        // compute camera offset in world coords
+        float wx = camX - sunX;
+        float wz = camZ - sunZ;
+        // map to minimap
+        float mapX = centerX + wx * dynamicScale;
+        float mapY = centerY + wz * dynamicScale;
+
+        // size of arrow
+        const float arrowSize = 8.0f;
+        // draw a filled triangle pointing "up" (positive Z)
+        glColor3f(0.0f, 1.0f, 1.0f); // cyan
+        glBegin(GL_TRIANGLES);
+        // tip
+        glVertex2f(mapX, mapY - arrowSize);
+        // left
+        glVertex2f(mapX - arrowSize * 0.6f, mapY + arrowSize * 0.6f);
+        // right
+        glVertex2f(mapX + arrowSize * 0.6f, mapY + arrowSize * 0.6f);
+        glEnd();
+
+        // optional: outline
+        glColor3f(0, 0, 0);
+        glLineWidth(1.0f);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(mapX, mapY - arrowSize);
+        glVertex2f(mapX - arrowSize * 0.6f, mapY + arrowSize * 0.6f);
+        glVertex2f(mapX + arrowSize * 0.6f, mapY + arrowSize * 0.6f);
         glEnd();
     }
     glPopMatrix();
