@@ -28,3 +28,17 @@ WorldDisplay/x64/Debug/GoldilocksPlanet.obj
 WorldDisplay/x64/Debug/main.obj
 WorldDisplay/x64/Debug/resource.obj
 *.obj
+WorldDisplay/x64/Debug/CelestialBodies.obj
+.vs/WorldDisplay/v17/ipch/AutoPCH/1c163fdd27042fe9/TMP4D80.TMP.ipch
+.vs/WorldDisplay/v17/ipch/AutoPCH/719f99710e81f62f/RESOURCE.ipch
+.vs/WorldDisplay/v17/ipch/AutoPCH/e17898a3f7dc1de/DEADPLANETS.ipch
+.vs/WorldDisplay/v17/Solution.VC.db
+WorldDisplay/x64/Debug/CelestialBodies.obj
+WorldDisplay.vcxproj.filters
+WorldDisplay.vcxproj
+WorldDisplay/x64/Debug/GoldilocksPlanet.obj
+WorldDisplay/x64/Debug/main.obj
+/x64/Debug
+/WorldDisplay/x64/Debug
+*.obj
+WorldDisplay/x64/Debug/CelestialBodies.obj

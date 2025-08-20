@@ -11,6 +11,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 // Include your custom headers
 #include "CelestialBodies.h"    // For Sun, Planet, Moon, etc.
@@ -436,6 +437,17 @@ void initSDL(int argc, char* argv[], SDL_Window*& window, SDL_GLContext& context
     // Initialize GLUT for text rendering.
     glutInit(&argc, argv);
 
+    // init SDL_image for PNG support
+    int imgFlags = IMG_INIT_PNG;
+    if (!(IMG_Init(imgFlags) & imgFlags)) {
+        std::cerr << "IMG_Init failed: " << IMG_GetError() << "\n";
+        // we’ll still run, but PNG loading will fail
+    }
+
+    // print out working directory so you can confirm where your exe is looking
+    std::cout << "Current working dir: "
+        << std::filesystem::current_path() << "\n";
+
     // Set OpenGL version (using 2.1 for compatibility).
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
@@ -448,6 +460,17 @@ void initSDL(int argc, char* argv[], SDL_Window*& window, SDL_GLContext& context
     if (!window) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         exit(1);
+    }
+	// Set the window icon
+    {  
+        SDL_Surface* icon = IMG_Load("Star_gazer_icon.png");  
+        if (icon) {  
+            SDL_SetWindowIcon(window, icon);  
+            SDL_FreeSurface(icon);  
+        } 
+        else {  
+               std::cerr << "Failed to load window icon: " << IMG_GetError() << std::endl;  
+        }  
     }
 
     context = SDL_GL_CreateContext(window);
